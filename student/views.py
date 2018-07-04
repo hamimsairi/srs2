@@ -16,16 +16,19 @@ from .models import Student
 
 # Create your views here.
 
+
+@login_required(login_url='/accounts/login/')
 def home(request):
 	return render(request,'base.html')
 
 def home_sbadmin(request):
   return render(request,'student/index.html')  
 
+@login_required(login_url='/accounts/login/')
 def home_json(request):
     return render(request, 'student/home_json.html')	
 
-
+@login_required(login_url='/accounts/login/')
 def student_new(request):
 
     if request.method == "POST":
@@ -44,6 +47,7 @@ def student_new(request):
 
 
 #Delete Function
+@login_required(login_url='/accounts/login/')
 def student_remove(request,pk):
 
     student = get_object_or_404(Student, pk=pk)
@@ -56,9 +60,28 @@ def student_remove(request,pk):
 
     return render(request, 'student/student_confirm_delete.html', {'student': student, 'pk':pk})
 
+#Edit Student
+@login_required(login_url='/accounts/login/')
+def student_edit(request,pk):
+
+    student = get_object_or_404(Student, pk=pk)
+    if request.method == "POST":
+        form = StudentForm(request.POST,instance=student)
+        if form.is_valid():
+            student = form.save(commit=False)
+            student.createdby = request.user
+            student.save()
+            # return redirect('post_detail', pk=post.pk)
+            messages.success(request, "Student record with ID: " + str(student.pk) + " has been updated! ")
+            return redirect(reverse_lazy('student_detail',kwargs={'pk': student.pk }))
+    else:
+        form = StudentForm(instance=student)
+    
+    return render(request, 'student/student_edit.html', {'form': form})
 
 
 #Getting Student Details
+@login_required(login_url='/accounts/login/')
 def student_detail(request,pk):
     student = get_object_or_404(Student, pk=pk)
     print(student)
